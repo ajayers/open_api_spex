@@ -35,8 +35,20 @@ defmodule OpenApiSpex.Plug.Validate do
     else
       {:error, reason} ->
         conn
-        |> Conn.send_resp(422, "#{reason}")
+        |> assign_errors(reason)
         |> Conn.halt()
+    end
+  end
+
+  defp assign_errors(conn, reason) do
+    accepts = Conn.get_req_header(conn, "accept")
+    content_types = Conn.get_req_header(conn, "content-type")
+
+    if Enum.member?(accepts, "application/json") ||
+         (Enum.empty?(accepts) && Enum.member?(content_types, "application/json")) do
+      Conn.send_resp(conn, 422, Poison.encode!(%{errors: reason}))
+    else
+      Conn.send_resp(conn, 422, reason)
     end
   end
 end

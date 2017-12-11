@@ -25,26 +25,26 @@ defmodule OpenApiSpexTest do
         |> OpenApiSpexTest.Router.call([])
 
       assert conn.params == %OpenApiSpexTest.Schemas.UserRequest{
-        user: %OpenApiSpexTest.Schemas.User{
-          id: 123,
-          name: "asdf",
-          email: "foo@bar.com",
-          updated_at: ~N[2017-09-12T14:44:55Z] |> DateTime.from_naive!("Etc/UTC")
-        }
-      }
+               user: %OpenApiSpexTest.Schemas.User{
+                 id: 123,
+                 name: "asdf",
+                 email: "foo@bar.com",
+                 updated_at: ~N[2017-09-12T14:44:55Z] |> DateTime.from_naive!("Etc/UTC")
+               }
+             }
 
       assert Poison.decode!(conn.resp_body) == %{
-        "data" => %{
-          "email" => "foo@bar.com",
-          "id" => 1234,
-          "inserted_at" => nil,
-          "name" => "asdf",
-          "updated_at" => "2017-09-12T14:44:55Z"
-        }
-      }
+               "data" => %{
+                 "email" => "foo@bar.com",
+                 "id" => 1234,
+                 "inserted_at" => nil,
+                 "name" => "asdf",
+                 "updated_at" => "2017-09-12T14:44:55Z"
+               }
+             }
     end
 
-    test "Invalid Request" do
+    test "Invalid JSON Request" do
       request_body = %{
         "user" => %{
           "id" => 123,
@@ -61,7 +61,9 @@ defmodule OpenApiSpexTest do
 
       conn = OpenApiSpexTest.Router.call(conn, [])
       assert conn.status == 422
-      assert conn.resp_body == "#/user/name: Value does not match pattern: [a-zA-Z][a-zA-Z0-9_]+"
+
+      assert conn.resp_body ==
+               "{\"errors\":\"#/user/name: Value does not match pattern: [a-zA-Z][a-zA-Z0-9_]+\"}"
     end
   end
 end
