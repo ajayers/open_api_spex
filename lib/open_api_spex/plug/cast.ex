@@ -31,14 +31,29 @@ defmodule OpenApiSpex.Plug.Cast do
     conn = Conn.put_private(conn, :open_api_spex, private_data)
 
     case OpenApiSpex.cast(spec, operation, conn.params, content_type) do
-      {:ok, params} -> %{conn | params: params}
+      {:ok, params} ->
+        %{conn | params: params}
+
       {:error, reason} ->
         conn
-        |> Plug.Conn.send_resp(422, "#{reason}")
+        |> assign_errors(reason)
         |> Plug.Conn.halt()
     end
   end
+
   def call(conn = %{private: %{phoenix_controller: controller, phoenix_action: action}}, _opts) do
     call(conn, operation_id: controller.open_api_operation(action).operationId)
+  end
+
+  defp assign_errors(conn, reason) do
+    accepts = Conn.get_req_header(conn, "accept")
+    content_types = Conn.get_req_header(conn, "content-type")
+
+    if Enum.member?(accepts, "application/json") ||
+         (Enum.empty?(accepts) && Enum.member?(content_types, "application/json")) do
+      Conn.send_resp(conn, 422, Poison.encode!(%{errors: reason}))
+    else
+      Conn.send_resp(conn, 422, reason)
+    end
   end
 end

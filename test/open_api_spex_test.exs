@@ -13,6 +13,7 @@ defmodule OpenApiSpexTest do
         "user" => %{
           "id" => 123,
           "name" => "asdf",
+          "gpa" => 2.9,
           "email" => "foo@bar.com",
           "updated_at" => "2017-09-12T14:44:55Z"
         }
@@ -29,6 +30,7 @@ defmodule OpenApiSpexTest do
                  id: 123,
                  name: "asdf",
                  email: "foo@bar.com",
+                 gpa: 2.9,
                  updated_at: ~N[2017-09-12T14:44:55Z] |> DateTime.from_naive!("Etc/UTC")
                }
              }
@@ -37,6 +39,7 @@ defmodule OpenApiSpexTest do
                "data" => %{
                  "email" => "foo@bar.com",
                  "id" => 1234,
+                 "gpa" => 2.9,
                  "inserted_at" => nil,
                  "name" => "asdf",
                  "updated_at" => "2017-09-12T14:44:55Z"
@@ -50,6 +53,7 @@ defmodule OpenApiSpexTest do
           "id" => 123,
           "name" => "*1234",
           "email" => "foo@bar.com",
+          "gpa" => 2.9,
           "updated_at" => "2017-09-12T14:44:55Z"
         }
       }
@@ -64,6 +68,28 @@ defmodule OpenApiSpexTest do
 
       assert conn.resp_body ==
                "{\"errors\":\"#/user/name: Value does not match pattern: [a-zA-Z][a-zA-Z0-9_]+\"}"
+    end
+
+    test "Invalid JSON Request with bad float" do
+      request_body = %{
+        "user" => %{
+          "id" => 123,
+          "name" => "*1234",
+          "email" => "foo@bar.com",
+          "gpa" => "xx",
+          "updated_at" => "2017-09-12T14:44:55Z"
+        }
+      }
+
+      conn =
+        :post
+        |> Plug.Test.conn("/api/users", Poison.encode!(request_body))
+        |> Plug.Conn.put_req_header("content-type", "application/json")
+
+      conn = OpenApiSpexTest.Router.call(conn, [])
+      assert conn.status == 422
+
+      assert conn.resp_body == "{\"errors\":\"bad_float\"}"
     end
   end
 end
