@@ -64,10 +64,13 @@ defmodule OpenApiSpexTest do
         |> Plug.Conn.put_req_header("content-type", "application/json")
 
       conn = OpenApiSpexTest.Router.call(conn, [])
+      #      IO.puts("XAJA|#{inspect(conn, pretty: true)}")
       assert conn.status == 422
 
       assert conn.resp_body ==
                "{\"errors\":\"#/user/name: Value does not match pattern: [a-zA-Z][a-zA-Z0-9_]+\"}"
+
+      assert Plug.Conn.get_resp_header(conn, "content-type") == ["application/json"]
     end
 
     test "Invalid JSON Request with bad float" do
@@ -88,8 +91,7 @@ defmodule OpenApiSpexTest do
 
       conn = OpenApiSpexTest.Router.call(conn, [])
       assert conn.status == 422
-
-      assert conn.resp_body == "{\"errors\":\"bad_float\"}"
+      assert Plug.Conn.get_resp_header(conn, "content-type") == ["application/json"]
     end
   end
 end

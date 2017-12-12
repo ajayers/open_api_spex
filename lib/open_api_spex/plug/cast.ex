@@ -51,7 +51,9 @@ defmodule OpenApiSpex.Plug.Cast do
 
     if Enum.member?(accepts, "application/json") ||
          (Enum.empty?(accepts) && Enum.member?(content_types, "application/json")) do
-      Conn.send_resp(conn, 422, Poison.encode!(%{errors: reason}))
+      conn
+      |> Conn.put_resp_header("content-type", "application/json")
+      |> Conn.send_resp(422, Poison.encode!(%{errors: reason}))
     else
       Conn.send_resp(conn, 422, reason)
     end
